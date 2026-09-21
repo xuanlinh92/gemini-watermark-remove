@@ -236,7 +236,34 @@
   <link rel="stylesheet" href="./style.css" />
   <script defer src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
 </head>
+<script>
+(function () {
+    if (new URLSearchParams(window.location.search).get('embed') !== '1') {
+        return;
+    }
 
+    function sendHeight() {
+        const height = Math.max(
+            document.body.scrollHeight,
+            document.documentElement.scrollHeight
+        );
+
+        window.parent.postMessage({
+            type: 'workflowfree-embed-height',
+            height: height
+        }, 'https://workflowfree.com');
+    }
+
+    window.addEventListener('load', sendHeight);
+    window.addEventListener('resize', sendHeight);
+
+    const observer = new ResizeObserver(sendHeight);
+    observer.observe(document.body);
+
+    setTimeout(sendHeight, 300);
+    setTimeout(sendHeight, 1000);
+})();
+</script>
 <body>
 
   <!-- Top Navigation Header -->
