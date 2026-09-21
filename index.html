@@ -1047,72 +1047,145 @@
   <script src="./main.js"></script>
 <script>
 (function () {
+    let lastHeight = 0;
+    let timer = null;
 
-    function getPageHeight() {
+    function getRealPageHeight() {
         const body = document.body;
         const html = document.documentElement;
 
         let maxBottom = 0;
 
-        document.querySelectorAll('body *').forEach(function (el) {
+        // Tìm phần tử nằm thấp nhất thực tế trong trang
+        const elements = document.querySelectorAll('body *');
+
+        elements.forEach(function (el) {
+            const style = window.getComputedStyle(el);
+
+            // Bỏ qua element không hiển thị
+            if (
+                style.display === 'none' ||
+                style.visibility === 'hidden'
+            ) {
+                return;
+            }
+
             const rect = el.getBoundingClientRect();
 
-            const bottom =
-                rect.bottom + window.scrollY;
+            if (rect.width === 0 && rect.height === 0) {
+                return;
+            }
+
+            const bottom = rect.bottom + window.scrollY;
 
             if (bottom > maxBottom) {
                 maxBottom = bottom;
             }
         });
 
-        return Math.ceil(
+        // Nếu có footer thì ưu tiên lấy đáy footer
+        const footer = document.querySelector('footer');
+
+        if (footer) {
+            const footerRect = footer.getBoundingClientRect();
+
+            maxBottom = Math.max(
+                maxBottom,
+                footerRect.bottom + window.scrollY
+            );
+        }
+
+        const height = Math.ceil(
             Math.max(
+                maxBottom,
                 body.scrollHeight,
                 body.offsetHeight,
-                html.clientHeight,
                 html.scrollHeight,
                 html.offsetHeight,
-                maxBottom
-            )
+                html.clientHeight
+            ) + 40
         );
+
+        return height;
     }
 
-    function sendHeight() {
-        const height = getPageHeight();
+    function sendHeight(force = false) {
+        const height = getRealPageHeight();
 
-        window.parent.postMessage({
-            type: 'workflowfree-tool-height',
-            height: height
-        }, '*');
+        // Chỉ gửi khi chiều cao thay đổi đáng kể
+        if (
+            force ||
+            Math.abs(height - lastHeight) > 5
+        ) {
+            lastHeight = height;
+
+            window.parent.postMessage(
+                {
+                    type: 'workflowfree-tool-height',
+                    height: height
+                },
+                '*'
+            );
+        }
     }
 
-    window.addEventListener('load', sendHeight);
-    window.addEventListener('resize', sendHeight);
+    function scheduleHeightUpdate() {
+        clearTimeout(timer);
 
-    document.addEventListener(
-        'DOMContentLoaded',
-        sendHeight
+        timer = setTimeout(function () {
+            sendHeight(true);
+        }, 100);
+    }
+
+    // Khi tải trang
+    window.addEventListener('load', function () {
+        sendHeight(true);
+
+        setTimeout(function () {
+            sendHeight(true);
+        }, 250);
+
+        setTimeout(function () {
+            sendHeight(true);
+        }, 750);
+
+        setTimeout(function () {
+            sendHeight(true);
+        }, 1500);
+
+        setTimeout(function () {
+            sendHeight(true);
+        }, 3000);
+
+        setTimeout(function () {
+            sendHeight(true);
+        }, 5000);
+    });
+
+    // Khi thay đổi kích thước
+    window.addEventListener(
+        'resize',
+        scheduleHeightUpdate
     );
 
+    // Theo dõi thay đổi layout
     if ('ResizeObserver' in window) {
         const resizeObserver =
             new ResizeObserver(function () {
-                requestAnimationFrame(sendHeight);
+                scheduleHeightUpdate();
             });
 
+        resizeObserver.observe(document.body);
         resizeObserver.observe(
             document.documentElement
         );
-
-        resizeObserver.observe(
-            document.body
-        );
     }
 
+    // Theo dõi DOM thay đổi
     if ('MutationObserver' in window) {
         const mutationObserver =
             new MutationObserver(function () {
-                requestAnimationFrame(sendHeight);
+                scheduleHeightUpdate();
             });
 
         mutationObserver.observe(
@@ -1125,22 +1198,28 @@
         );
     }
 
-    document.querySelectorAll('img')
+    // Ảnh thường làm trang tăng chiều cao sau khi load
+    document
+        .querySelectorAll('img')
         .forEach(function (img) {
 
-            if (!img.complete) {
-                img.addEventListener(
-                    'load',
-                    sendHeight
-                );
-            }
+            img.addEventListener(
+                'load',
+                scheduleHeightUpdate
+            );
         });
 
-    setTimeout(sendHeight, 100);
-    setTimeout(sendHeight, 500);
-    setTimeout(sendHeight, 1000);
-    setTimeout(sendHeight, 2000);
-    setTimeout(sendHeight, 4000);
+    // Font tải xong cũng có thể làm layout đổi
+    if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(function () {
+            sendHeight(true);
+        });
+    }
+
+    // Backup: kiểm tra lại định kỳ vài giây
+    setInterval(function () {
+        sendHeight(false);
+    }, 2000);
 
 })();
 </script>
