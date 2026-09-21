@@ -236,34 +236,6 @@
   <link rel="stylesheet" href="./style.css" />
   <script defer src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
 </head>
-<script>
-(function () {
-    if (new URLSearchParams(window.location.search).get('embed') !== '1') {
-        return;
-    }
-
-    function sendHeight() {
-        const height = Math.max(
-            document.body.scrollHeight,
-            document.documentElement.scrollHeight
-        );
-
-        window.parent.postMessage({
-            type: 'workflowfree-embed-height',
-            height: height
-        }, 'https://workflowfree.com');
-    }
-
-    window.addEventListener('load', sendHeight);
-    window.addEventListener('resize', sendHeight);
-
-    const observer = new ResizeObserver(sendHeight);
-    observer.observe(document.body);
-
-    setTimeout(sendHeight, 300);
-    setTimeout(sendHeight, 1000);
-})();
-</script>
 <body>
 
   <!-- Top Navigation Header -->
@@ -1073,6 +1045,42 @@
   </main>
 
   <script src="./main.js"></script>
+  <script>
+(function () {
+
+    function sendHeight() {
+        const height = Math.max(
+            document.body.scrollHeight,
+            document.body.offsetHeight,
+            document.documentElement.scrollHeight,
+            document.documentElement.offsetHeight,
+            document.documentElement.clientHeight
+        );
+
+        window.parent.postMessage({
+            type: 'workflowfree-tool-height',
+            height: height
+        }, '*');
+    }
+
+    window.addEventListener('load', sendHeight);
+    window.addEventListener('resize', sendHeight);
+
+    if ('ResizeObserver' in window) {
+        const observer = new ResizeObserver(function () {
+            requestAnimationFrame(sendHeight);
+        });
+
+        observer.observe(document.body);
+    }
+
+    setTimeout(sendHeight, 100);
+    setTimeout(sendHeight, 500);
+    setTimeout(sendHeight, 1000);
+    setTimeout(sendHeight, 2000);
+
+})();
+</script>
 </body>
 
 </html>
