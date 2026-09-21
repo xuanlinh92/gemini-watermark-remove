@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://remove.workflowfree.com/</loc>
+    <lastmod>2026-08-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://remove.workflowfree.com/assets/logo.webp</image:loc>
+      <image:title>Free Gemini Watermark Remover &amp; Gemini Logo Remover</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://remove.workflowfree.com/assets/before.webp</image:loc>
+      <image:title>Google Gemini Image Before Watermark and Logo Removal</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://remove.workflowfree.com/assets/after.webp</image:loc>
+      <image:title>Clean Google Gemini Image After Removing Gemini Watermark</image:title>
+    </image:image>
+  </url>
+</urlset>
+
