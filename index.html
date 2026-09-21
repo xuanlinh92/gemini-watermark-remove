@@ -1047,15 +1047,38 @@
   <script src="./main.js"></script>
   <script>
 (function () {
+    function getPageHeight() {
+        const body = document.body;
+        const html = document.documentElement;
+
+        let maxBottom = 0;
+
+        document.querySelectorAll('body *').forEach(function (el) {
+            const rect = el.getBoundingClientRect();
+
+            const bottom =
+                rect.bottom +
+                window.scrollY;
+
+            if (bottom > maxBottom) {
+                maxBottom = bottom;
+            }
+        });
+
+        return Math.ceil(
+            Math.max(
+                body.scrollHeight,
+                body.offsetHeight,
+                html.clientHeight,
+                html.scrollHeight,
+                html.offsetHeight,
+                maxBottom
+            )
+        );
+    }
 
     function sendHeight() {
-        const height = Math.max(
-            document.body.scrollHeight,
-            document.body.offsetHeight,
-            document.documentElement.scrollHeight,
-            document.documentElement.offsetHeight,
-            document.documentElement.clientHeight
-        );
+        const height = getPageHeight();
 
         window.parent.postMessage({
             type: 'workflowfree-tool-height',
@@ -1066,19 +1089,41 @@
     window.addEventListener('load', sendHeight);
     window.addEventListener('resize', sendHeight);
 
+    document.addEventListener('DOMContentLoaded', sendHeight);
+
     if ('ResizeObserver' in window) {
-        const observer = new ResizeObserver(function () {
+        const resizeObserver = new ResizeObserver(function () {
             requestAnimationFrame(sendHeight);
         });
 
-        observer.observe(document.body);
+        resizeObserver.observe(document.documentElement);
+        resizeObserver.observe(document.body);
     }
+
+    if ('MutationObserver' in window) {
+        const mutationObserver = new MutationObserver(function () {
+            requestAnimationFrame(sendHeight);
+        });
+
+        mutationObserver.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            characterData: false
+        });
+    }
+
+    document.querySelectorAll('img').forEach(function (img) {
+        if (!img.complete) {
+            img.addEventListener('load', sendHeight);
+        }
+    });
 
     setTimeout(sendHeight, 100);
     setTimeout(sendHeight, 500);
     setTimeout(sendHeight, 1000);
     setTimeout(sendHeight, 2000);
-
+    setTimeout(sendHeight, 4000);
 })();
 </script>
 </body>
